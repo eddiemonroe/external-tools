@@ -1,0 +1,57 @@
+
+    
+
+    
+      
+       
+          <div class="span9">
+            <div class="row">
+              <highchart id="chart1" config="chartConfig" class="span9" ></highchart>
+            </div>
+            <div class="row">
+              <label for="prettyJSON"><input id="prettyJSON" type="checkbox" ng-model="prettyJSON"> Pretty JSON</label>
+            </div>
+            <div class="row">
+              <pre ng-show="prettyJSON">
+{{ chartConfig | json }}
+                    </pre>
+              <pre ng-show="!prettyJSON">
+{{ chartConfig }}
+                    </pre>
+            </div>
+          </div>
+          <div class="span4">
+            <div class="row">Title <input ng-model="chartConfig.title.text"></div>
+            <div class="row">Subtitle <input ng-model="chartConfig.subtitle.text"></div>
+            <div class="row">Width <input ng-model="chartConfig.size.width"></div>
+            <div class="row">Height <input ng-model="chartConfig.size.height"></div>
+            <div class="row"><button ng-click="reflow()">reflow</button></div>
+            <div class="row">Default Type <select ng-model="chartConfig.options.chart.type" ng-options="t.id as t.title for t in chartTypes"></select></div>
+            <div class="row">Stack <select ng-model="chartConfig.options.plotOptions.series.stacking" ng-options="t.id as t.title for t in chartStack"></select></div>
+            <div class="row"><label><input type="checkbox" ng-model="chartConfig.loading"> is loading</label></div>
+            <div class="row"><label><input type="checkbox" ng-model="chartConfig.credits.enabled"> credits</label></div>
+            <h4>Series</h4>
+            <div class="row" ng-repeat="ser in chartSeries">
+              <div class="span12 well">
+                <div class="row">Title <input ng-model="ser.name"></div>
+                <div class="row">Type <select ng-model="ser.type" ng-options="t.id as t.title for t in chartTypes"></select></div>
+                <div class="row">Color <input ng-model="ser.color"></div>
+                <div class="row">Width <input ng-model="ser.lineWidth"></div>
+                <div class="row">Dash Style <select ng-model="ser.dashStyle" ng-options="ds.id as ds.title for ds in dashStyles"></select></div>
+                <div class="row"><label><input type="checkbox" ng-model="ser.connectNulls"> interpolate</label></div>
+                <div class="row"><button ng-click="removeSeries($index)">Delete</button></div>
+              </div>
+            </div>
+            <div class="row"><button ng-click="addSeries()">Add Series</button></div>
+            <div class="row"><button ng-click="addPoints()">Add Points to Random Series</button></div>
+            <div class="row"><button ng-click="removeRandomSeries()">Remove Random Series</button></div>
+            <div class="row"><button ng-click="toggleHighCharts()">HighChart/HighStock</button></div>
+            <div class="row"><button ng-click="replaceAllSeries()">Replace all series</button></div>
+            <div class="row">Min: <input type="number" ng-model="chartConfig.xAxis.currentMin"></div>
+            <div class="row">Max: <input type="number" ng-model="chartConfig.xAxis.currentMax"></div>
+          </div>
+       
+    
+    
+
+  
