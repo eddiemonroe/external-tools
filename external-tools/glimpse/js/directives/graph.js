@@ -2,9 +2,9 @@ angular.module('glimpse')
     .directive('graph', function ($http) {
 
   //Todo: These should be read from config or set through the app
-  var psiVariables = ["arousal", "positive_valence", "negative_valence"],
-      numPlotLinePts = 10, //number of most recent values to plot
-      refreshRate = 1000   // rate in ms var values are updated from server
+  var psiVariables = ["arousal", "positive-valence", "negative-valence"];
+  var numPlotLinePts = 10; //number of most recent values to plot
+  var refreshRate = 1000;   // rate in ms that values are updated from server
 
 
   var link = function (scope, element, attributes, $parent, $scope) {
@@ -55,22 +55,25 @@ angular.module('glimpse')
       }, refreshRate);
 
     };
-
-
-
+    
     scope.update = function() {
   
       //TODO: endpoint URL should not be hardcoded but read from global config
       var endpointURL = "http://localhost:5000/api/v1.1/scheme";
 
-      //var scm = "(psi-get-number-values-for-vars \"arousal\" \"positive_valence\" \"negative_valence\")"
-      var scm = "(psi-get-number-values-for-vars \"arousal\")" // \"positive_valence\" \"negative_valence\")"
+      var vars = ""
+      for (i in psiVariables) {
+        vars += "\"" + psiVariables[i] + "\"";
+      }
+      //var scm = "(psi-get-number-values-for-vars \"arousal\" \"positive-valence\" \"negative-valence\")";
+      var scm = "(psi-get-number-values-for-vars" + vars + ")";
+      console.log("scm command: " + scm);
 
       $http.post(endpointURL, {command: scm}, {headers: {'Content-Type': 'application/json'} }).then(function (response,status) {
         //var data = response.data; // I assume this is JSON here! If it is a String it can be parsed using JSON.parse(string).
         //console.log(data)         // No need to manually parse this. I assume this format: data = {"arousal": 0.1, "sadness": 0.2}
 
-        //var data = JSON.parse(response.data.response); // I am guessing this is needed in production instead...
+        //var data = JSON.parse(response.data.response); // I am guessing this is- needed in production instead...
         var responseString = response.data.response;
         console.log("\nresponseString: " + responseString);
 
@@ -80,18 +83,6 @@ angular.module('glimpse')
         for (varname in results) {
           console.log("    " + varname + ": " + results[varname])
         }
-
-/*
-        var arraysv = [];
-        arraysv.push(value);
-        console.log("arraysv: " + arraysv);
-        scope.chartSeries = [
-          {"name": key, "data": arraysv}
-
-        ];
-*/
-
-
 
         //iterate over each psi variable and feed into chartseries object
         for (varName in results) {
@@ -109,37 +100,24 @@ angular.module('glimpse')
               chartSeriesObject.data.push(value);
               variableExists = true;
             }
- /*           else {
-              //The variable doesn't exist in chartSeries yet, create new entry
-              var values = [];
-              values.fill(value,0,numPlotLinePts-1);
-              scope.chartSeries.push({"name": varName, "data": values, connectNulls: true});
-
-            }
-*/          }
-
-          //console.log("variableExists: " + variableExists);
+          }
 
           if (!variableExists) {
             //The variable doesn't exist in chartSeries yet, create new entry
             console.log("Found new variable: " + varName)
             // plot the full line at the current value for initiating
             var values = Array(numPlotLinePts).fill(value);
-
             scope.chartSeries.push({"name": varName, "data": values, connectNulls: true});
             //scope.chartSeries.push({"name": varName, "data": [value], connectNulls: true});
           }
 
         }
 
-
       }, function errorCallback(err) {
         console.log(err.message)        
       });
 
-
-      console.log("scope.chartSeries: " + scope.chartSeries);
-
+      //console.log("scope.chartSeries: " + scope.chartSeries);
 
     }  // update()
 
