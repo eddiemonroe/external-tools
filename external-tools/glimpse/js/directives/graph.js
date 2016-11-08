@@ -55,7 +55,7 @@ angular.module('glimpse')
       }, refreshRate);
 
     };
-    
+
     scope.update = function() {
   
       //TODO: endpoint URL should not be hardcoded but read from global config
@@ -67,16 +67,11 @@ angular.module('glimpse')
       }
       //var scm = "(psi-get-number-values-for-vars \"arousal\" \"positive-valence\" \"negative-valence\")";
       var scm = "(psi-get-number-values-for-vars" + vars + ")";
-      console.log("scm command: " + scm);
+      //console.log("scm command: " + scm);
 
       $http.post(endpointURL, {command: scm}, {headers: {'Content-Type': 'application/json'} }).then(function (response,status) {
-        //var data = response.data; // I assume this is JSON here! If it is a String it can be parsed using JSON.parse(string).
-        //console.log(data)         // No need to manually parse this. I assume this format: data = {"arousal": 0.1, "sadness": 0.2}
-
-        //var data = JSON.parse(response.data.response); // I am guessing this is- needed in production instead...
         var responseString = response.data.response;
         console.log("\nresponseString: " + responseString);
-
 
         var results = JSON.parse(responseString);
         console.log("results: ");
@@ -108,9 +103,7 @@ angular.module('glimpse')
             // plot the full line at the current value for initiating
             var values = Array(numPlotLinePts).fill(value);
             scope.chartSeries.push({"name": varName, "data": values, connectNulls: true});
-            //scope.chartSeries.push({"name": varName, "data": [value], connectNulls: true});
           }
-
         }
 
       }, function errorCallback(err) {
