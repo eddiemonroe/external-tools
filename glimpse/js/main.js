@@ -41,6 +41,11 @@ glimpse.controller("mainCtrl", function ($rootScope, $scope, $window, $timeout, 
             connectDialog.setPosition((window.innerWidth - connectPanel._cachedWidth) / 2, (window.innerHeight - connectPanel._cachedHeight) / 2);
         } else if (panel == 'graph2' && documentManagerNode.children.indexOf(graphNode) == -1) {
             graphNode = dockManager.dockFill(documentManagerNode, graphPanel);
+            
+            // This is defined in graph.js
+            console.log("graph loaded... starting periodic update")
+            $rootScope.initGraphView()
+
         } else if (panel == 'json' && documentManagerNode.children.indexOf(jsonNode) == -1) {
             jsonNode = dockManager.dockFill(documentManagerNode, jsonPanel);
         } else if (panel == 'planar' && documentManagerNode.children.indexOf(planarNode) == -1) {

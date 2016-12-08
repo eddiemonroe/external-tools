@@ -9,6 +9,9 @@ angular.module('glimpse')
         atomsFactory.server = "";
         atomsFactory.nodeTypes = [];
         atomsFactory.types = [];
+
+            //Todo: These should be read from config or set through the app
+        atomsFactory.psiVariables = ["arousal", "positive-valence", "negative-valence", "power","voice width"];
 	
        // Member functions
         atomsFactory.updateAtoms = function (successCB, failureCB) {
@@ -20,6 +23,7 @@ angular.module('glimpse')
                 function (response) {
                     atomsFactory.atoms = response.data.result.atoms;
                     atomsFactory.atomsCount = response.data.result.total;
+                    console.log("[AF] updated atoms...")
                     if (typeof successCB === "function") successCB();
 		     },
                 function (error) {
@@ -27,6 +31,7 @@ angular.module('glimpse')
                 }
             );
         };
+
         atomsFactory.setServer = function (s) {
             atomsFactory.server = s; 
         };
@@ -55,6 +60,7 @@ angular.module('glimpse')
                 method: 'GET',
                 url: atomsFactory.server + 'api/v1.1/types'
             }).then(function (response) {
+                console.log("[AF] updated atom types...")
                 atomsFactory.types = response.data.types;
                 atomsFactory.nodeTypes = response.data.types.filter(function (atom) {
                     return atom.indexOf("Node") > -1;
@@ -106,6 +112,44 @@ angular.module('glimpse')
               if (typeof failureCB === "function") failureCB();
             }
           );
+        };
+
+        atomsFactory.updateAttentionValues = function (successCB, failureCB) {
+           if (atomsFactory.server == "") {
+            //we are not connected.
+            if (typeof failureCB === "function") failureCB({"message": "not connected"});
+            return
+           }
+
+           var vars = ""
+           for (i in atomsFactory.psiVariables) {
+               vars += "\"" + atomsFactory.psiVariables[i] + "\"";
+           }
+           //var scm = "(psi-get-number-values-for-vars \"arousal\" \"positive-valence\" \"negative-valence\")";
+           var scm = "(psi-get-number-values-for-vars" + vars + ")";
+           //console.log("scm command: " + scm);
+
+           $http({
+                method: 'POST',
+                url: atomsFactory.server + "api/v1.1/scheme", //TODO: this is a placeholder and will just work for test data, should fetch POST w. correct scm command.
+                cache: false,
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                data: {command: scm}
+            }).then(
+                function (response) {
+                    var responseString = response.data.response;
+                    var results = JSON.parse(responseString);
+
+                    atomsFactory.attention = results;
+                    console.log("[AF] updated attention...")
+                    if (typeof successCB === "function") successCB();
+                },
+                function (error) {
+                    if (typeof failureCB === "function") failureCB();
+                }
+            );
         };
 
         return atomsFactory;

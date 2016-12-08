@@ -1,16 +1,14 @@
-angular.module('glimpse').directive('graph', function ($http) {
+angular.module('glimpse').directive('graph', function ($rootScope, $http, AtomsFactory) {
 
-    //Todo: These should be read from config or set through the app
-    var psiVariables = ["arousal", "positive-valence", "negative-valence",
-        "power","voice width"];
     var historyTimeLength = 10; //length of plot line in number of seconds
     var refreshRate = 100;   // rate in ms that values are updated from server
 
     // Set number of plot line points to show data for specified time period
     var numPlotLinePts = Math.round(1000/refreshRate)*historyTimeLength;
 
-    var link = function (scope, element, attributes, $parent, $scope) {
-        scope.chartTypes = [
+    var controller = function($scope, $rootScope) {
+    //var link = function (scope, rootScope, element, attributes, $parent, $scope) {
+        $scope.chartTypes = [
             {"id": "line", "title": "Line"},
             {"id": "spline", "title": "Smooth line"},
             {"id": "area", "title": "Area"},
@@ -21,14 +19,10 @@ angular.module('glimpse').directive('graph', function ($http) {
             {"id": "scatter", "title": "Scatter"}
         ];
 
-        scope.init = function () {
-            scope.chartSeries = [];
+        $scope.init = function () {
+            $scope.chartSeries = [];
 
-            scope.chartConfig = {
-                //Note: Setting the default line type (and I'm guessing other properties
-                //in chartConfig.options) does not work when set in the directive link
-                //function, so setting it in the controller function instead.
-                /*
+            $scope.chartConfig = {
                 options: {
                     chart: {
                         type: 'spline'
@@ -39,8 +33,7 @@ angular.module('glimpse').directive('graph', function ($http) {
                         }
                     }
                 },
-                */
-                series: scope.chartSeries,
+                series: $scope.chartSeries,
                 title: {
                     text: 'OpenPSI Variables'
                 },
@@ -62,34 +55,16 @@ angular.module('glimpse').directive('graph', function ($http) {
 
             window.setInterval(function() {
                 //periodically update data
-                scope.update();
+                $scope.update();
             }, refreshRate);
 
         };
 
-        scope.update = function() {
+        $scope.update = function() {
 
-            //TODO: endpoint URL should use the same server/port as the main application,
-            //with "/api/v1.1/scheme" appended
-            var endpointURL = "http://localhost:5000/api/v1.1/scheme";
+           AtomsFactory.updateAttentionValues(function(){
 
-            var vars = ""
-            for (i in psiVariables) {
-                vars += "\"" + psiVariables[i] + "\"";
-            }
-            //var scm = "(psi-get-number-values-for-vars \"arousal\" \"positive-valence\" \"negative-valence\")";
-            var scm = "(psi-get-number-values-for-vars" + vars + ")";
-            //console.log("scm command: " + scm);
-
-            $http.post(endpointURL, {command: scm}, {headers: {'Content-Type': 'application/json'} }).then(function (response,status) {
-                var responseString = response.data.response;
-                console.log("\nresponseString: " + responseString);
-
-                var results = JSON.parse(responseString);
-                console.log("results: ");
-                for (varname in results) {
-                    console.log("    " + varname + ": " + results[varname])
-                }
+                results = AtomsFactory.attention
 
                 //iterate over each psi variable and feed into chartseries object
                 for (varName in results) {
@@ -102,8 +77,8 @@ angular.module('glimpse').directive('graph', function ($http) {
                     //figure out if data point is already in chartSeries
                     var variableExists = false;
 
-                    for (i in scope.chartSeries) {
-                        chartSeriesObject = scope.chartSeries[i];
+                    for (i in $scope.chartSeries) {
+                        chartSeriesObject = $scope.chartSeries[i];
                         if (chartSeriesObject.name == varName) {
                             //it already exists, update array
                             //remove the first element and add current value to the end
@@ -118,7 +93,7 @@ angular.module('glimpse').directive('graph', function ($http) {
                         console.log("Found new variable: " + varName)
                         // plot the full line at the current value for initiating
                         var values = Array(numPlotLinePts).fill(value);
-                        scope.chartSeries.push({name: varName, data: values,
+                        $scope.chartSeries.push({name: varName, data: values,
                             marker: {enabled: false},
                             connectNulls: true});
                     }
@@ -128,44 +103,19 @@ angular.module('glimpse').directive('graph', function ($http) {
                 console.log(err.message)
             });
 
-            //console.log("scope.chartSeries: " + scope.chartSeries);
-
         }  // update()
 
-        //TODO: This executes as soon as glimpse loads, it should only load when graph is loaded / server is connected...
-        scope.init();
+        // This is being triggered from main.js when panel comes up.
+        // Until there is better detection in dock-spawn for when panels
+        // Open and close, this is a dirty hack.
+        $rootScope.initGraphView = $scope.init
+
 
     }; // link function
 
-
-    var controller = function($scope) {
-        // Set the default line type in controller function because it doesn't work
-        // to set it in the directive link function (and I'm guessing the same for
-        // other properties in chartConfig.options).
-        $scope.chartConfig = {
-            options: {
-                chart: {
-                    type: 'spline'
-                },
-                plotOptions: {
-                    series: {
-                        stacking: ''
-                    },
-                    line: {
-                        marker: {
-                            enabled: false
-                        }
-                    }
-                }
-            },
-        };
-    }
-
     return {
-        link: link,
         controller: controller,
         restrict: 'E',
-        scope: {atoms: '='},
         templateUrl: 'js/templates/graph.html'
     }
 });
