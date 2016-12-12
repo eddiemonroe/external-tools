@@ -27,7 +27,8 @@ if (environment == "test") {
     });
 
     test_atoms.use('/api/v1.1/scheme', function(req, res) {
-       res.send('{\"arousal\": '+Math.random()+', \"sadness\": '+Math.random()+'}');
+       data = {"arousal": Math.random(), "sadness": Math.random()}
+       res.send({"response": JSON.stringify(data)});
     });
 
     test_atoms.listen(5000, function() {
